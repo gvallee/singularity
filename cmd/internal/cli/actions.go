@@ -8,10 +8,12 @@ package cli
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	ocitypes "github.com/containers/image/types"
 	"github.com/spf13/cobra"
+	"github.com/sylabs/sif/pkg/sif"
 	"github.com/sylabs/singularity/docs"
 	"github.com/sylabs/singularity/internal/pkg/build"
 	"github.com/sylabs/singularity/internal/pkg/client/cache"
@@ -59,8 +61,24 @@ func init() {
 	SingularityCmd.AddCommand(TestCmd)
 }
 
-// actionPreRun will run replaceURIWithImage and will also do the proper path unsetting
+// actionPreRun will do basic checks, as well as run replaceURIWithImage and
+// will also do the proper path unsetting
 func actionPreRun(cmd *cobra.Command, args []string) {
+	// Check the architecture of the image when not in the VM case
+	if !VM {
+		imagePath := args[0]
+		fimg, err := sif.LoadContainer(imagePath, true)
+		if err == nil {
+			// This is a SIF image, we get the architecture from the header
+			sifArch := string(fimg.Header.Arch[:sif.HdrArchLen-1])
+			if sifArch != sif.HdrArchUnknown {
+				if sif.GetSIFArch(runtime.GOARCH) != sifArch {
+					sylog.Fatalf("The image's architecture (%s) is incompatible with the host (%s)", sif.GetGoArch(sifArch), runtime.GOARCH)
+				}
+			}
+		}
+	}
+
 	// backup user PATH
 	userPath := strings.Join([]string{os.Getenv("PATH"), defaultPath}, ":")
 

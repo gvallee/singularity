@@ -23,6 +23,10 @@ import (
 // computeHashStr generates a hash from data object(s) and generates a string
 // to be stored in the signature block
 func computeHashStr(fimg *sif.FileImage, descr []*sif.Descriptor) string {
+	if fimg == nil {
+		sylog.Warningf("undefined SIF image")
+		return ""
+	}
 	hash := sha512.New384()
 	for _, v := range descr {
 		hash.Write(v.GetData(fimg))
@@ -35,6 +39,10 @@ func computeHashStr(fimg *sif.FileImage, descr []*sif.Descriptor) string {
 
 // sifAddSignature adds a signature block to a SIF file
 func sifAddSignature(fimg *sif.FileImage, groupid, link uint32, fingerprint [20]byte, signature []byte) error {
+	if fimg == nil {
+		return fmt.Errorf("invalid SIF image")
+	}
+
 	// data we need to create a signature descriptor
 	siginput := sif.DescriptorInput{
 		Datatype: sif.DataSignature,

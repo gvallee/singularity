@@ -22,25 +22,29 @@ import (
 
 const manifestgenDir = "cmd/plugin_manifestgen"
 
-// getSingularitySrcDir returns the source directory for singularity
+// getSingulairtySrcDirFromBasedir checks if 'basedir' is the Singularity source directory. If the directory is not the Singularity source directory, an empty string and an error are returned.
+func getSingularitySrcDirFromBasedir(basedir string) (string, error) {
+	// We separate this function from getSingularitySrcDir() to help with testing.
+	canary := filepath.Join(basedir, "cmd", "singularity", "cli.go")
+	switch _, err := os.Stat(canary); {
+
+	case os.IsNotExist(err):
+		return "", fmt.Errorf("cannot find \"%s\"", canary)
+	case err != nil:
+		return "", fmt.Errorf("unexpected error while looking for \"%s\": %s", canary, err)
+	default:
+		return basedir, nil
+	}
+}
+
+// getSingularitySrcDir checks whether the current directory is the Singularity source directory. If the current directory is not the source directory, an empty string and an error are returned.
 func getSingularitySrcDir() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 
-	canary := filepath.Join(dir, "cmd", "singularity", "cli.go")
-
-	switch _, err = os.Stat(canary); {
-	case os.IsNotExist(err):
-		return "", fmt.Errorf("cannot find \"%s\"", canary)
-
-	case err != nil:
-		return "", fmt.Errorf("unexpected error while looking for \"%s\": %s", canary, err)
-
-	default:
-		return dir, nil
-	}
+	return getSingularitySrcDirFromBasedir(dir)
 }
 
 // pluginObjPath returns the path of the .so file which is built when

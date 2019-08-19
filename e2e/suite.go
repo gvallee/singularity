@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	singularitykey "github.com/sylabs/singularity/e2e/key"
+	"github.com/sylabs/singularity/e2e/run"
 
 	singularityinspect "github.com/sylabs/singularity/e2e/inspect"
 
@@ -161,6 +162,7 @@ func Run(t *testing.T) {
 		"VERIFY":     singularityverify.RunE2ETests(testenv),
 		"VERSION":    version.RunE2ETests(testenv),
 		"CACHE":      singularitycache.RunE2ETests(testenv),
+		"RUN":        run.RunE2ETests(testenv),
 	}
 
 	for name, fn := range suites {
